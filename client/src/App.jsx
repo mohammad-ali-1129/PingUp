@@ -66,7 +66,7 @@
 
 
 import { Route, Routes } from 'react-router-dom'
-import { useUser } from '@clerk/clerk-react'
+import { useAuth, useUser } from '@clerk/clerk-react'
 import Login from './pages/Login'
 import Layout from './pages/Layout'
 import Feed from './pages/Feed'
@@ -76,10 +76,27 @@ import Connections from './pages/Connections'
 import CreatePost from './pages/CreatePost'
 import Discover from './pages/Discover'
 import Profile from './pages/Profile'
+import { useEffect } from 'react'
 import { Toaster } from 'react-hot-toast'
 
 const App = () => {
   const { user, isLoaded } = useUser()
+  const { getToken } = useAuth()
+
+
+  useEffect(() => {
+    
+      if (user) {
+        getToken().then((token) => console.log(token))
+        // const token = await getToken();
+        // dispatch(fetchUser(token));
+        // dispatch(fetchConnections(token));
+      }
+    
+
+    // fetchData();
+  }, [user]);
+
 
   if (!isLoaded) return null   // or loading spinner
 
