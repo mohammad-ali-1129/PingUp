@@ -27,10 +27,10 @@
 //          <Route path='profile/:profileId' element= {<Profile/>}/>
 //          <Route path='create-post' element= {<CreatePost/>}/>
 //         </Route>
-          
+
 
 //       </Routes>
-      
+
 
 
 //     </>
@@ -65,7 +65,7 @@
 
 
 
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth, useUser } from '@clerk/clerk-react'
 import Login from './pages/Login'
 import Layout from './pages/Layout'
@@ -76,29 +76,81 @@ import Connections from './pages/Connections'
 import CreatePost from './pages/CreatePost'
 import Discover from './pages/Discover'
 import Profile from './pages/Profile'
-import { useEffect } from 'react'
-import { Toaster } from 'react-hot-toast'
+import { useEffect, useRef } from 'react'
+import toast, { Toaster } from 'react-hot-toast'
+import { useDispatch } from 'react-redux'
+import { fetchUser } from './features/user/userSlice'
+import { fetchConnections } from './features/connections/connectionsSlice'
+import { addMessage } from './features/messages/messagesSlice'
+import MessageToast from './components/MessageToast'
 
 const App = () => {
-  const { user, isLoaded } = useUser()
+  const { user } = useUser();
+
   const { getToken } = useAuth()
+  const pathname = useLocation().pathname;
+  const pathnameRef = useRef(pathname);
+  const dispatch = useDispatch()
 
 
   useEffect(() => {
-    
+
+    const fetchData = async () => {
       if (user) {
-        getToken().then((token) => console.log(token))
-        // const token = await getToken();
-        // dispatch(fetchUser(token));
-        // dispatch(fetchConnections(token));
+        const token = await getToken()
+        dispatch(fetchUser(token))
+        dispatch(fetchConnections(token))
       }
-    
+    }
+    fetchData()
 
-    // fetchData();
-  }, [user]);
+  }, [user, getToken, dispatch])
+
+  useEffect(() => {
+    pathnameRef.current = pathname;
+  }, [pathname]);
 
 
-  if (!isLoaded) return null   // or loading spinner
+  useEffect(() => {
+    if (user) {
+      const eventSource = new EventSource(
+        import.meta.env.VITE_BASEURL + "/api/message/" + user.id
+      );
+
+      // eventSource.onmessage = (event) => {
+      //   const message = JSON.parse(event.data);
+      //   if (pathnameRef.current === "/messages/" + message.from_user_id._id) {
+      //     dispatch(addMessage(message));
+      //   } else {
+      //     toast.custom((t) => <Notification t={t} message={message} />, {
+      //       position: "bottom-right",
+      //     });
+      //   }
+      // };
+
+      eventSource.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+
+          if (pathnameRef.current === "/messages/" + message.from_user_id._id) {
+            dispatch(addMessage(message));
+          } else {
+            toast.custom((t) => <MessageToast t={t} message={message} />, {
+              position: "bottom-right",
+            });
+          }
+        } catch (error) {
+          console.log("Non-JSON message received:", event.data);
+        }
+      };
+
+
+      return () => {
+        eventSource.close();
+      };
+    }
+  }, [user, dispatch]);
+  // if (!isLoaded) return null   // or loading spinner
 
   return (
     <>

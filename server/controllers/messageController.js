@@ -97,13 +97,14 @@ export const sendMessage = async (req, res) => {
 
         
 
-        // ✅ Send HTTP response
-        res.json({ success: true, message: messageWithUserData })
-
+        
 
         // ✅ Populate sender details for frontend use
         const messageWithUserData = await Message.findById(message._id)
             .populate("from_user_id", "full_name profile_picture") // select only needed fields
+
+        // ✅ Send HTTP response
+        res.json({ success: true, message: messageWithUserData })
 
 
         // ✅ Push to recipient via SSE
