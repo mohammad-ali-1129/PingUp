@@ -1,6 +1,8 @@
 import { Inngest } from "inngest";
 import User from "../models/User.js";
 import Connection from "../models/Connection.js";
+import Story from "../models/Story.js";
+import Message from "../models/Message.js";
 // import Connection from "../models/Connection.js";
 // import sendEmail from "../config/nodeMailer.js";
 // import Story from "../models/Story.js";
@@ -118,9 +120,10 @@ const sendNewConnectionRequestRemainder = inngest.createFunction(
                 body
             })
 
+        return { message: "Remainder Sent." }
+
         })
 
-        return { message: "Remainder Sent." }
 
     }
 )
@@ -242,6 +245,8 @@ const sendNewConnectionRequestReminder = inngest.createFunction(
     });
   }
 );
+
+
 
 
 
